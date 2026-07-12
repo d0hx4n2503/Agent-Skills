@@ -1,0 +1,30 @@
+{
+  "name": "agent-skills",
+  "version": "1.0.0",
+  "description": "AnDo's Agent skills for engineering",
+  "homepage": "https://github.com/d0hx4n2503/Agent-Skills#readme",
+  "bugs": {
+    "url": "https://github.com/d0hx4n2503/Agent-Skills/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/d0hx4n2503/Agent-Skills.git"
+  },
+  "license": "MIT",
+  "author": "",
+  "type": "commonjs",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "changeset": "changeset",
+    "version": "changeset version"
+  },
+  "dependencies": {
+    "@changesets/changelog-github": "^0.7.0",
+    "@changesets/cli": "^2.31.0"
+  },
+  "packageManager": "npm@10.9.4"
+}
