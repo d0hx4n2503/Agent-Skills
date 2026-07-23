@@ -121,6 +121,16 @@ jobs:
           console.log(markdown);
           NODE
 
+      - name: Resolve target branch
+        id: target-branch
+        run: |
+          if [ -n "${GITHUB_HEAD_REF:-}" ]; then
+            echo "target_ref=${GITHUB_HEAD_REF}" >> "$GITHUB_OUTPUT"
+          else
+            ref=${GITHUB_REF#refs/heads/}
+            echo "target_ref=${ref}" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Commit changeset file
         if: steps.changeset-check.outputs.has_changeset != 'true'
         run: |
@@ -132,4 +142,4 @@ jobs:
             exit 0
           fi
           git commit -m "chore: add changeset for PR"
-          git push origin HEAD:${{ github.event.pull_request.head.ref }}
+          git push origin HEAD:${{ steps.target-branch.outputs.target_ref }}
