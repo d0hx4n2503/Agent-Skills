@@ -5,6 +5,9 @@ on:
     types: [opened, reopened, synchronize, edited]
     branches:
       - main
+  push:
+    branches:
+      - main
 
 permissions:
   contents: write
@@ -12,14 +15,13 @@ permissions:
 
 jobs:
   auto-changeset:
-    if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout PR branch
+      - name: Checkout branch
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.ref }}
+          ref: ${{ github.ref }}
           fetch-depth: 0
 
       - name: Setup Node.js
@@ -49,12 +51,13 @@ jobs:
           const fs = require('fs');
           const path = require('path');
           const event = JSON.parse(fs.readFileSync(process.env.EVENT_PATH, 'utf8'));
-          const pr = event.pull_request;
-          const title = (pr.title || '').trim();
-          const body = (pr.body || '').trim();
-          const labels = (pr.labels || []).map((label) => (label.name || '').toLowerCase());
           const pkg = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'package.json'), 'utf8'));
           const packageName = pkg.name || 'agent-skills';
+
+          const isPullRequest = Boolean(event.pull_request);
+          const title = isPullRequest ? (event.pull_request.title || '').trim() : (event.head_commit?.message || '').split('\n')[0].trim();
+          const body = isPullRequest ? (event.pull_request.body || '').trim() : (event.head_commit?.message || '').trim();
+          const labels = isPullRequest ? (event.pull_request.labels || []).map((label) => (label.name || '').toLowerCase()) : [];
 
           const sourceText = `${title}\n${body}`.toLowerCase();
           const hasBreaking = labels.some((label) => ['major', 'breaking'].includes(label)) || /(breaking|breaking change|removed|deprecated)/.test(sourceText);
@@ -78,7 +81,7 @@ jobs:
               .trim();
           }
 
-          const summaryText = extractSummary(body) || title || 'Updates for this pull request.';
+          const summaryText = extractSummary(body) || title || 'Updates for this change.';
           const summaryLine = summaryText.length > 180 ? `${summaryText.slice(0, 177)}...` : summaryText;
 
           const sections = [];
