@@ -1,0 +1,45 @@
+name: Skill Improvement
+description: Suggest improvements to an existing skill
+title: "[Improvement]: "
+labels: ["enhancement", "skill-improvement"]
+body:
+  - type: input
+    id: skill-name
+    attributes:
+      label: Skill Name
+      placeholder: e.g., research, implement, teach
+    validations:
+      required: true
+  - type: dropdown
+    id: improvement-type
+    attributes:
+      label: Type of Improvement
+      options:
+        - Clarify instructions
+        - Improve workflow steps
+        - Add examples or prompts
+        - Improve discoverability
+        - Add missing files or structure
+        - Fix outdated content
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: current-issue
+    attributes:
+      label: Current Issue
+      description: What is unclear, missing, or outdated?
+    validations:
+      required: true
+  - type: textarea
+    id: suggested-improvement
+    attributes:
+      label: Suggested Improvement
+      description: What should be changed or added?
+    validations:
+      required: true
+  - type: textarea
+    id: expected-impact
+    attributes:
+      label: Expected Impact
+      description: How would this improve the skill for users or contributors?

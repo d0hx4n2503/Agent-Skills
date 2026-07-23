@@ -1,0 +1,132 @@
+name: Auto Changeset
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, edited]
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  auto-changeset:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check for existing changeset
+        id: changeset-check
+        run: |
+          if find .changeset -maxdepth 1 -type f -name '*.md' ! -name 'README.md' | grep -q .; then
+            echo "has_changeset=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_changeset=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create changeset with release-style summary
+        if: steps.changeset-check.outputs.has_changeset != 'true'
+        env:
+          EVENT_PATH: ${{ github.event_path }}
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+          const path = require('path');
+          const event = JSON.parse(fs.readFileSync(process.env.EVENT_PATH, 'utf8'));
+          const pr = event.pull_request;
+          const title = (pr.title || '').trim();
+          const body = (pr.body || '').trim();
+          const labels = (pr.labels || []).map((label) => (label.name || '').toLowerCase());
+          const pkg = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'package.json'), 'utf8'));
+          const packageName = pkg.name || 'agent-skills';
+
+          const sourceText = `${title}\n${body}`.toLowerCase();
+          const hasBreaking = labels.some((label) => ['major', 'breaking'].includes(label)) || /(breaking|breaking change|removed|deprecated)/.test(sourceText);
+          const hasFeature = labels.some((label) => ['minor', 'feature', 'enhancement'].includes(label)) || /(feature|feat|add|new)/.test(sourceText);
+          const hasFix = labels.some((label) => ['bug', 'fix', 'patch'].includes(label)) || /(fix|bug|resolve|improve|reliability)/.test(sourceText);
+          const hasSecurity = labels.includes('security') || /(security|vulnerability|auth)/.test(sourceText);
+
+          let bump = 'patch';
+          if (hasBreaking) bump = 'major';
+          else if (hasFeature) bump = 'minor';
+
+          function extractSummary(text) {
+            if (!text) return '';
+            return text
+              .replace(/<[^>]*>/g, '')
+              .replace(/\r/g, '')
+              .split(/\n+/)
+              .map((line) => line.trim())
+              .filter((line) => line && !line.startsWith('##') && !line.startsWith('###') && !line.startsWith('>'))
+              .join(' ')
+              .trim();
+          }
+
+          const summaryText = extractSummary(body) || title || 'Updates for this pull request.';
+          const summaryLine = summaryText.length > 180 ? `${summaryText.slice(0, 177)}...` : summaryText;
+
+          const sections = [];
+          if (hasBreaking) {
+            sections.push('### Changed');
+            sections.push(`- [BREAKING] ${summaryLine}`);
+            sections.push('');
+            sections.push('### Removed');
+            sections.push('- Removed deprecated or incompatible behavior.');
+          } else if (hasFeature) {
+            sections.push('### Added');
+            sections.push(`- ${summaryLine}`);
+            sections.push('');
+            sections.push('### Changed');
+            sections.push('- Improved existing workflows and capabilities.');
+          } else {
+            sections.push('### Fixed');
+            sections.push(`- ${summaryLine}`);
+            sections.push('');
+            sections.push('### Changed');
+            sections.push('- Minor reliability and usability improvements.');
+          }
+
+          if (hasSecurity) {
+            sections.push('');
+            sections.push('### Security');
+            sections.push('- Security-related updates included.');
+          }
+
+          const markdown = [`---`, `"${packageName}": ${bump}`, `---`, ``, `## Release Summary`, ``, ...sections].join('\n');
+          const fileName = '.changeset/auto-summary.md';
+
+          fs.mkdirSync(path.dirname(fileName), { recursive: true });
+          fs.writeFileSync(fileName, `${markdown}\n`);
+
+          console.log(`Created ${fileName}`);
+          console.log(markdown);
+          NODE
+
+      - name: Commit changeset file
+        if: steps.changeset-check.outputs.has_changeset != 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .changeset/*.md
+          if git diff --cached --quiet; then
+            echo "No changeset created."
+            exit 0
+          fi
+          git commit -m "chore: add changeset for PR"
+          git push origin HEAD:${{ github.event.pull_request.head.ref }}

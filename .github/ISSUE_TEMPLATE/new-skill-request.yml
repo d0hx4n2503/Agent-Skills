@@ -1,0 +1,53 @@
+name: New Skill Proposal
+description: Suggest a new skill for this repository
+title: "[Skill Proposal]: "
+labels: ["enhancement", "new-skill", "help wanted"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form to propose a new skill for this collection. A clear use case makes review much easier.
+  - type: input
+    id: skill-name
+    attributes:
+      label: Proposed Skill Name
+      description: Use a short, descriptive kebab-case name.
+      placeholder: e.g., debugging-api-errors
+    validations:
+      required: true
+  - type: dropdown
+    id: category
+    attributes:
+      label: Category
+      options:
+        - Engineering
+        - Productivity
+        - In-progress
+        - Documentation
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: use-case
+    attributes:
+      label: Problem or Use Case
+      description: What problem should this skill help solve?
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: What the Skill Should Do
+      description: Describe the workflow, steps, or outputs the skill should guide.
+    validations:
+      required: true
+  - type: textarea
+    id: examples
+    attributes:
+      label: Example Inputs or Prompts
+      description: Share a sample prompt, command, or scenario.
+  - type: textarea
+    id: success-criteria
+    attributes:
+      label: Success Criteria
+      description: How would you know the skill is useful?

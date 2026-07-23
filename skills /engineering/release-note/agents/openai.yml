@@ -1,0 +1,3 @@
+interface:
+  display_name: "Release Notes Generator"
+  short_description: "Generate changelogs following SemVer and Keep a Changelog"

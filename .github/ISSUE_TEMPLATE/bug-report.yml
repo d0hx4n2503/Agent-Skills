@@ -1,0 +1,68 @@
+name: Bug Report
+description: Report a broken skill, incorrect instructions, or repository issue
+title: "[Bug]: "
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve this repository. Please describe the issue clearly so it can be reviewed quickly.
+  - type: input
+    id: skill-name
+    attributes:
+      label: Skill Name
+      description: Which skill is affected?
+      placeholder: e.g., teach, code-review, research
+    validations:
+      required: true
+  - type: dropdown
+    id: category
+    attributes:
+      label: Category
+      options:
+        - Engineering
+        - Productivity
+        - In-progress
+        - Documentation
+        - Repo/tooling
+        - Other
+    validations:
+      required: true
+  - type: dropdown
+    id: bug-type
+    attributes:
+      label: Bug Type
+      options:
+        - Broken or unclear instructions
+        - Missing or incorrect files
+        - Broken script or automation
+        - Documentation issue
+        - Metadata/frontmatter issue
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What is happening?
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What should happen instead?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      description: Share the steps needed to reproduce the issue, if known.
+  - type: input
+    id: ai-agent
+    attributes:
+      label: AI Agent Used
+      description: Which agent or tool were you using?
+      placeholder: e.g., Claude Code, GitHub Copilot, Codex CLI
